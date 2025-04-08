@@ -1,0 +1,47 @@
+tasks/main.yml :
+
+---
+- name: installer apache2
+  apt:
+    name: apache2
+    state: present
+    update_cache: yes
+
+- name: installer phpmyadmin
+  apt:
+    name: phpmyadmin
+    state: present
+    update_cache: yes
+
+- name: copier les config de phpmyadmin
+  template:
+    src: config.inc.php.j2
+    dest: /etc/phpmyadmin/config.inc.php
+  notify:
+    - restart Apache
+
+handlers/main.yml : 
+
+---
+- name: redémarrer Apache
+  service:
+    name: apache2
+    state: restarted
+
+templates/config.inc.php.j2 : 
+
+<?php
+$cfg['blowfish_secret'] = '{{ blowfish_secret }}';
+$i++;
+$cfg['Servers'][$i]['host'] = '{{ db_host }}';
+$cfg['Servers'][$i]['user'] = '{{ db_user }}';
+$cfg['Servers'][$i]['password'] = '{{ db_password }}';
+$cfg['Servers'][$i]['auth_type'] = 'cookie';
+?>
+
+defaults/main.yml :
+---
+blowfish_secret: 'random_secret'
+db_host: '192.168.1.30'
+db_user: 'testuser'
+db_password: 'testpassword'
